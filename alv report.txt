@@ -1,0 +1,116 @@
+*&---------------------------------------------------------------------*
+*& Report  ZNEWREPORT
+*&
+*&---------------------------------------------------------------------*
+*&
+*&
+*&---------------------------------------------------------------------*
+report znewreport.
+
+TYPE-POOLS : slis.
+
+DATA: it_flight type table of zflight,
+     wa_flight type zflight.
+data : it_fieldcat type slis_t_fieldcat_alv,
+      wa_fieldcat type slis_fieldcat_alv.
+
+*//Tables declaration
+tables : zflight.
+
+*//Types declaration for ZFLIGHT
+types : begin of ty_flight,
+SEATID type i,
+NAME  TYPE c,
+LOCATION  TYPE c,
+NUMB  TYPE i,
+STAT  TYPE c,
+DESCRIPTION TYPE c,
+end of ty_flight.
+
+*//Internal table declaration
+data : lt_flight type table of ty_flight.
+
+*//Work area declaration
+data : wa_fli type ty_flight.
+
+PARAMETERS : P_BATCH AS CHECKBOX.
+PARAMETERS : P_RAD4 RADIOBUTTON GROUP RB1.
+PARAMETERS : P_RAD5 RADIOBUTTON GROUP RB1.
+"-----------------------------------------radio buttons-----------------------------------------------------------------"
+START-OF-SELECTION.
+  IF P_RAD4 = 'X'.
+   " if P_RAD4 is not initial.
+      select SEATID NAME LOCATION NUMB STAT DESCRIPTION
+        from zflight
+        into table it_flight
+        where STAT = '2'.
+    WRITE:/ 'Radio Button1 is selected '.
+  ELSEIF P_RAD5 = 'X'.
+    WRITE:/ 'Radio Button2 Is selectd'.
+
+  ENDIF.
+"-----------------------------------------------------------------------------------------------------------------------------
+
+  "selection process
+SELECT * from zflight INTO TABLE it_flight.
+
+LOOP AT it_flight INTO wa_flight.
+  IF wa_flight-STAT = 'I'.
+wa_flight-DESCRIPTION = 'FLIGHT BOARDING'.
+
+ELSEIF wa_flight-STAT = 'A'.
+  wa_flight-DESCRIPTION = 'FLIGHT DELAYED'.
+
+   ENDIF.
+  MODIFY it_flight  FROM wa_flight.
+ENDLOOP.
+"building catalouge
+
+wa_fieldcat-fieldname = 'SEATID'.
+wa_fieldcat-seltext_m = 'SEAT'.
+
+APPEND wa_fieldcat TO it_fieldcat.
+
+
+wa_fieldcat-fieldname = 'NAME'.
+wa_fieldcat-seltext_m = 'NAME'.
+
+APPEND wa_fieldcat TO it_fieldcat.
+
+
+wa_fieldcat-fieldname = 'LOCATION'.
+wa_fieldcat-seltext_m = 'LOCATION'.
+
+APPEND wa_fieldcat TO it_fieldcat.
+
+wa_fieldcat-fieldname = 'NUMB'.
+wa_fieldcat-seltext_m = 'NUMBER'.
+
+
+APPEND wa_fieldcat TO it_fieldcat.
+
+wa_fieldcat-fieldname = 'STAT'.
+wa_fieldcat-seltext_m = 'STATUS'.
+
+
+APPEND wa_fieldcat TO it_fieldcat.
+
+wa_fieldcat-fieldname = 'DESCRIPTION'.
+wa_fieldcat-seltext_m = 'DESCRIPTION'.
+
+
+"append the values.
+
+APPEND wa_fieldcat TO it_fieldcat.
+
+"SELECT STAT FROM it_fieldcat WHERE.
+
+"ALV GRID VIEW
+
+
+
+CALL FUNCTION 'REUSE_ALV_GRID_DISPLAY'
+  EXPORTING
+    it_fieldcat = it_fieldcat
+  TABLES
+    t_outtab    = it_flight.
